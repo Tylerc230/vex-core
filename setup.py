@@ -1,5 +1,5 @@
-from sourcekitd import request
+from sourcekitd.request import syntax_annotate_text
 text = "struct MyStruct {}"
-resp = request.syntax_annotate_text(text)
+resp = syntax_annotate_text(text)
 print(resp)
 
