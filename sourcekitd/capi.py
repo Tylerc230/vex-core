@@ -74,7 +74,7 @@ class Object(object):
         elif isinstance(obj, (int, long, bool)):
             self._obj = conf.lib.sourcekitd_request_int64_create(obj)
         elif isinstance(obj, str):
-            self._obj = conf.lib.sourcekitd_request_string_create(obj)
+            self._obj = conf.lib.sourcekitd_request_string_create(obj.encode("utf-8"))
         elif isinstance(obj, UIdent):
             self._obj = conf.lib.sourcekitd_request_uid_create(obj)
         elif isinstance(obj, dict):
@@ -105,7 +105,7 @@ class Object(object):
 
     def __repr__(self):
         ptr = conf.lib.sourcekitd_request_description_copy(self)
-        s = string_at(ptr)
+        s = string_at(ptr).decode('utf-8')
         conf.free(ptr)
         return s
 
@@ -130,7 +130,7 @@ class Response(object):
 
     def __repr__(self):
         ptr = conf.lib.sourcekitd_response_description_copy(self)
-        s = string_at(ptr)
+        s = string_at(ptr).decode('utf-8')
         conf.free(ptr)
         return s
 
@@ -143,13 +143,13 @@ class UIdent(object):
         elif isinstance(obj, UIdent):
             self._obj = obj._obj
         elif isinstance(obj, str):
-            self._obj = conf.lib.sourcekitd_uid_get_from_cstr(obj)
+            self._obj = conf.lib.sourcekitd_uid_get_from_cstr(obj.encode('utf-8'))
         else:
             raise ValueError("wrong init parameter (%s)" % type(obj))
         self._as_parameter_ = self._obj
 
     def __str__(self):
-        return conf.lib.sourcekitd_uid_get_string_ptr(self)
+        return conf.lib.sourcekitd_uid_get_string_ptr(self).decode('utf-8')
 
     def from_param(self):
         return self._as_parameter_
@@ -230,7 +230,7 @@ class Variant(Structure):
         elif var_ty == VariantType.INT64:
             return conf.lib.sourcekitd_variant_int64_get_value(self)
         elif var_ty == VariantType.STRING:
-            return conf.lib.sourcekitd_variant_string_get_ptr(self)
+            return conf.lib.sourcekitd_variant_string_get_ptr(self).decode('utf-8')
         elif var_ty == VariantType.UID:
             return UIdent(conf.lib.sourcekitd_variant_uid_get_value(self))
         else:
@@ -249,7 +249,9 @@ class Variant(Structure):
 
     def to_python_dictionary(self):
         def applier(cobj, value, d):
-            d[str(UIdent(cobj))] = value.to_python_object()
+            uid = UIdent(cobj)
+            py_obj = value.to_python_object()
+            d[str(uid)] = py_obj
             # continue
             return 1
         d = {}
@@ -556,10 +558,8 @@ def register_functions(lib, ignore_errors):
     This must be called as part of library instantiation so Python knows how
     to call out to the shared library.
     """
-    def register(item):
-        return register_function(lib, item, ignore_errors)
-
-    map(register, functionList)
+    for item in functionList:
+        register_function(lib, item, ignore_errors)
 
 
 class Config(object):
@@ -623,7 +623,6 @@ class Config(object):
     def get_sourcekitd_library(self):
         try:
             library = cdll.LoadLibrary(self.get_filename())
-            print("library loaded")
         except OSError as e:
             msg = str(e) + ". To provide a path to sourcekitd use " \
                            "Config.set_library_path() or " \
