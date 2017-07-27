@@ -632,7 +632,7 @@ class Config(object):
         return library
 
 
-Config.set_library_path(".")
+Config.set_library_path("./sourcekitd/")
 conf = Config()
 conf.lib.sourcekitd_initialize()
 
