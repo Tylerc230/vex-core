@@ -11,7 +11,11 @@ class Completion():
     def completion_at_offset(self, byte_offset):
         req = { 
                 'key.request': UIdent(self.request_key),
-                'key.offset': byte_offset
+                'key.offset': byte_offset,
+                'key.sourcefile': "46F57330-59A6-490C-A782-2E3C3C0DC5E0.swift",
+                'key.compilerargs': [ 
+                    "-c", "46F57330-59A6-490C-A782-2E3C3C0DC5E0.swift",
+                    ]
                 }
         if not self.text == None:
             req['key.sourcetext'] = self.text
@@ -19,6 +23,7 @@ class Completion():
             req['key.sourcefile'] = self.source_file
         else:
             raise RuntimeError("Must do completion on file or text")
-        return request_sync(req)
+        resp = request_sync(req)
+        return resp.get_payload().to_python_object()
 
 
