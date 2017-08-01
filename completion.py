@@ -24,6 +24,9 @@ class Completion():
         else:
             raise RuntimeError("Must do completion on file or text")
         resp = request_sync(req)
-        return resp.get_payload().to_python_object()
+        py_obj =  resp.get_payload().to_python_object()
+        results = py_obj['key.results']
+        candidates = map(lambda d: d['key.sourcetext'], results)
+        return list(candidates)
 
 

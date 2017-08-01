@@ -7,5 +7,7 @@ a.myP"""
         completion = Completion(text=text)
         options = completion.completion_at_offset(48)
         assert len(options) == 1
+        completion = options[0]
+        assert isinstance(completion, str)
 
 
